@@ -41,7 +41,7 @@ pg_ctl initdb -D  $PGDATA
 #############################################################
 # PORT ALREADY IN USE                                       #
 #############################################################
-#                                                           #
+#                                                           #g
 # If another `nix-shell` is  running with a PostgreSQL      #
 # instance,  the logs  will show  complaints that  the      #
 # default port 5432  is already in use.  Edit the line      #
@@ -50,8 +50,22 @@ pg_ctl initdb -D  $PGDATA
 #                                                           #
 #############################################################
 
-# sed -i "s|^#port.*$|port = 5433|" $PGDATA/postgresql.conf
+# Define the default port number
+default_port=5432
 
+# Check if the PostgreSQL server is running on the default port
+nc -z localhost $default_port
+
+if [ $? -eq 0 ]; then
+  # If the default port is in use, pick a new one
+  new_port=$(( $default_port + 1 ))
+
+  # Update the PostgreSQL configuration file with the new port
+  sed -i "s|^#port.*$|port = $new_port|" $PGDATA/postgresql.conf
+
+  echo "Changed PostgreSQL port to $new_port."
+else
+  echo "PostgreSQL is already running on port $default_port."
 fi
 
 ########################################################################
